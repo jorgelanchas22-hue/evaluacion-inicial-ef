@@ -71,15 +71,16 @@ th { color: #6B7280; font-size: 0.65rem; text-transform: uppercase; }
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  databaseURL: "https://TU_PROYECTO-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.firebasestorage.app",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyD9ecpDNBaimEYjtwhNA7ol-1SOYesI1RY",
+  authDomain: "evaluacion-inical-ef.firebaseapp.com",
+  databaseURL: "https://evaluacion-inical-ef-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "evaluacion-inical-ef",
+  storageBucket: "evaluacion-inical-ef.firebasestorage.app",
+  messagingSenderId: "78829417059",
+  appId: "1:78829417059:web:6d791c2a2da752b684fe56"
 };
 const MODO_DEMO = firebaseConfig.apiKey === "TU_API_KEY";
 function crearDBLocal(){
@@ -731,7 +732,13 @@ function setClaveCorrecta(curso,idx,val,tipo){
   showToast('Clave actualizada');
 }
 
-loadData();
+if(MODO_DEMO){
+  loadData();
+} else {
+  firebase.auth().signInAnonymously().then(loadData).catch(err=>{
+    document.getElementById('app').innerHTML = '<div class="loading">No se pudo conectar (revisa que la autenticación anónima esté activada en Firebase).<br>'+err.message+'</div>';
+  });
+}
 </script>
 </body>
 </html>

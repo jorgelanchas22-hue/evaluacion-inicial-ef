@@ -557,7 +557,8 @@ function viewResultado(){
 }
 
 function viewProfesor(){
-  let h = '<div class="tabs">';
+  let h = '<span class="back" onclick="state.role=null;state.profAuth=false;state.view=\'inicio\';state.profTab=\'alumnos\';render()">← Salir del modo profesor</span>';
+  h += '<div class="tabs">';
   ['alumnos','bateria','registros','claves'].forEach(t=>{
     h += '<div class="tab '+(state.profTab===t?'active':'')+'" onclick="state.profTab=\''+t+'\';render()">'+t.charAt(0).toUpperCase()+t.slice(1)+'</div>';
   });

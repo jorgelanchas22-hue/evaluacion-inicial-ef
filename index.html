@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Evaluación Inicial EF</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, system-ui, sans-serif; background: #EEF1EF; color: #1C2321; min-height: 100vh; }
+.header { background: #1C2321; color: #fff; padding: 18px 16px; }
+.header h1 { font-size: 1.3rem; font-family: Georgia, serif; letter-spacing: 0.5px; }
+.header small { color: #B7BEBA; font-size: 0.75rem; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
+.card { background: #fff; border: 1px solid #D8DCD9; border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+.card h2 { font-size: 1.2rem; margin-bottom: 4px; }
+.desc { color: #6B7280; font-size: 0.85rem; margin-bottom: 14px; }
+label { display: block; font-size: 0.85rem; font-weight: 600; margin: 12px 0 6px; }
+label:first-of-type { margin-top: 0; }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid #D8DCD9; border-radius: 6px; font-size: 0.95rem; background: #FBFBFA; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.opts { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.opt { border: 1px solid #D8DCD9; border-radius: 6px; padding: 10px 12px; cursor: pointer; font-size: 0.9rem; }
+.opt.sel { border-color: #8A5C10; background: #FCF3E1; font-weight: 600; }
+button { font-weight: 600; font-size: 0.9rem; padding: 11px 16px; border-radius: 6px; border: 1px solid #1C2321; background: #1C2321; color: #fff; cursor: pointer; }
+button.ghost { background: transparent; color: #1C2321; }
+button.full { width: 100%; }
+button:active { transform: scale(0.98); }
+.navrow { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.lanes { display: flex; gap: 4px; margin-bottom: 6px; }
+.lane { flex: 1; height: 5px; border-radius: 3px; background: #D8DCD9; }
+.lane.done { background: #3F7A4E; }
+.lane.active { background: #E8A324; }
+.lane-labels { display: flex; gap: 4px; margin-bottom: 18px; }
+.lane-labels span { flex: 1; font-size: 0.6rem; text-align: center; color: #6B7280; text-transform: uppercase; }
+.scoreboard { background: #1C2321; border-radius: 12px; padding: 26px 20px; text-align: center; color: #fff; margin-bottom: 14px; }
+.scoreboard .eyebrow { font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: #B7BEBA; }
+.scoreboard .bignum { font-family: 'Courier New', monospace; font-size: 4.2rem; font-weight: 700; color: #E8A324; line-height: 1.1; }
+.criteria-row { display: flex; gap: 6px; margin-top: 18px; }
+.crit { flex: 1; background: rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 4px; }
+.crit .v { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: 700; }
+.crit .l { font-size: 0.6rem; color: #B7BEBA; text-transform: uppercase; margin-top: 2px; }
+.list-item { background: #fff; border: 1px solid #D8DCD9; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+.delete-btn { color: #C4432E; background: none; border: none; font-size: 1.1rem; cursor: pointer; }
+.prueba-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 4px; }
+.prueba-btn { background: #EEF1EF; border: 1px solid #D8DCD9; border-radius: 8px; padding: 12px 4px; text-align: center; cursor: pointer; font-size: 0.7rem; }
+.prueba-btn.sel { border-color: #8A5C10; background: #FCF3E1; }
+.prueba-btn.done { border-color: #3F7A4E; }
+.prueba-btn .pi { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+.big-input { font-size: 2rem; text-align: center; padding: 16px; font-family: 'Courier New', monospace; font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: #EEF1EF; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 14px; font-family: 'Courier New', monospace; font-weight: 700; font-size: 0.85rem; }
+.b9{background:#E1F0E5;color:#255432;} .b7{background:#E1F0E5;color:#255432;} .b5{background:#FCF3E1;color:#8A5C10;} .b3{background:#F9E4E0;color:#7A2A1D;} .b1{background:#F9E4E0;color:#7A2A1D;}
+table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+th, td { text-align: left; padding: 7px 4px; border-bottom: 1px solid #D8DCD9; }
+th { color: #6B7280; font-size: 0.65rem; text-transform: uppercase; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tab { padding: 7px 12px; border-radius: 16px; border: 1px solid #D8DCD9; font-size: 0.75rem; cursor: pointer; background: #fff; }
+.tab.active { background: #1C2321; color: #fff; border-color: #1C2321; }
+.back { color: #6B7280; font-size: 0.8rem; cursor: pointer; display: inline-block; margin-bottom: 8px; }
+.toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: #3F7A4E; color: #fff; padding: 10px 22px; border-radius: 22px; font-size: 0.85rem; z-index: 200; }
+.loading { text-align: center; padding: 60px 20px; color: #6B7280; }
+.editrow { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #EEF1EF; font-size: 0.8rem; }
+.editrow input, .editrow select { width: 100px; padding: 6px; font-size: 0.8rem; }
+.small { font-size: 0.75rem; color: #6B7280; }
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">Conectando...</div></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  databaseURL: "https://TU_PROYECTO-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.firebasestorage.app",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+const MODO_DEMO = firebaseConfig.apiKey === "TU_API_KEY";
+function crearDBLocal(){
+  let store = {};
+  let listeners = {};
+  function getAt(path){ return path.split('/').filter(Boolean).reduce((o,k)=>(o&&o[k]!==undefined)?o[k]:undefined, store); }
+  function setAt(path,val){
+    const parts = path.split('/').filter(Boolean);
+    let obj = store;
+    for(let i=0;i<parts.length-1;i++){ if(!obj[parts[i]]) obj[parts[i]]={}; obj=obj[parts[i]]; }
+    if(val===null) delete obj[parts[parts.length-1]]; else obj[parts[parts.length-1]] = val;
+    notificar();
+  }
+  function notificar(){ Object.keys(listeners).forEach(path=>{ listeners[path].forEach(cb=>cb({val:()=>getAt(path)})); }); }
+  let idc = 1;
+  return {
+    ref(path){
+      return {
+        on(event,cb){ if(!listeners[path]) listeners[path]=[]; listeners[path].push(cb); cb({val:()=>getAt(path)}); },
+        off(){ delete listeners[path]; },
+        once(event){ return Promise.resolve({val:()=>getAt(path)}); },
+        push(val){ const id = 'demo'+(idc++); setAt(path+'/'+id, val); return {key:id}; },
+        set(val){ setAt(path, val===undefined?null:val); return Promise.resolve(); },
+        update(val){ const cur = getAt(path)||{}; setAt(path, Object.assign({}, cur, val)); return Promise.resolve(); },
+        remove(){ setAt(path, null); return Promise.resolve(); }
+      };
+    }
+  };
+}
+let db;
+if(MODO_DEMO){
+  db = crearDBLocal();
+} else {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+}
+const PROF_PASS = "triana26";
+
+const CURSOS = ['4º A ESO','4º B ESO','4º C ESO','2º A ESO','2º B ESO','2º C ESO'];
+const ANIOS = ['2025-2026','2026-2027','2027-2028','2028-2029'];
+function anioPorDefecto(){
+  return '2026-2027';
+}
+function pathBase(){ return 'evalinicial/'+state.anio; }
+function esCuarto(curso){ return curso.startsWith('4'); }
+
+const ALUMNOS_SEED_4A = ["Alcaide Hernando, Héctor","Álvarez Punta, Pablo","Aranda Ruiz, Patricia","Barrera Leal, Claudia","Bautista Reina, Mario","Bayot Chacón, Paula","Cabello Toscano, Elizabeth","Calvarro Luque, Miguel","Campos García, Rebeca","Cantillana Esteban, Lucía","Carmona Jiménez, Jazmine","Casado González, Blanca","Castelló Martín, Gonzalo","Clemente González, Diego","Cordero Herrera, Rafael","De la Rocha Álvarez, Blanca","Granados Ferri, Lissette","Molina García, Luis","Perales Martín, Javier","Porras Tenorio, Rocío del Alba","Ramírez Centeno, Sofía","Sastre Vela, Manuel","Tejero Rocha, Victoria","Valenzuela Fernández, Daniela"];
+const ALUMNOS_SEED_4B = ["Acción Romero, Pilar","Aguilar García, Mario","Albelda García, África","Álvarez Maese, Ángel","Arancón Ramos, Macarena","Arcas Sánchez-Noriega, Carlos","Bolívar Amador, Valentina Stefania","Borrallo Vela, Daniela","Cerro Quintero, Rocío","Chekroun Murillo, Hugo","Concepción Cabello, Alba","Corchado García, Elena","Crespo Polvillo, Natalia","Cruz Martínez, Myriam","Domínguez Saavedra, Roberto","Estévez Ramos, Manuel","García González, Lucía","García Polonsky, Inés","Gómez González, Joaquín","Guerrero Mora, Marta","Herencia Broquetas, Reyes","Jaime Ruiz, Rocío","Lora Pérez, Jaime","Molpeceres Lobatón, Marcos","Muñoz Torres, Marta María","Murillo Navarro, Ángela Victoria","Navarro Castillo, Manuel","Olivencia Martínez, Carmen","Riballo Álvarez, Gonzalo","Rodríguez Rodríguez, Jaime","Ruiz Martínez, Antonio Jesús","Uribe Rodríguez, Pablo","Vizuete Crespo, Noelia","Zamorano Carbajal, Antonio","Zubiría De Paz, Laura"];
+const ALUMNOS_SEED_4C = ["De la Rosa González, Blanca","Fernández Melero, Nicolás","Fernández Niebla, Javier","Galera Arias, Marina","Hermida Theotonio, Carlos","Hurtado Villarreal, José Carlos","Jaime Ruiz, Esperanza","López Muñoz, Javier","Manzano Galindo, Manuel","Medina Villén, María Dolores","Oribe Ruibérriz de Torres, Jaime","Ortega Ortiz de la Tabla, Alberto","Parra Arteaga, Héctor","Parrado Cayuso, Victoria","Ramírez Bulnes, Alba","Ribera Villarreal, José Andrés","Rocha Pérez, Jaime de la","Rodríguez Berrio, Sergio","Rodríguez Salvador, Ana","Romero Hernández, Alejandra","Rufián Ramos, Marcos","Sánchez Valero, Manuel","Soldán Villalba, Mar","Valiente García, Gonzalo","Vargas Barrientos, José Antonio","Vázquez Gerena, Alejandro","Vega Pereira, Jesús"];
+
+const PRUEBAS_BATERIA = [
+  {id:'velocidad', nombre:'Velocidad 50m', unidad:'s', icon:'🏃', protocolo:'Recorrer 50 metros a máxima velocidad desde posición de pie. Se cronometra en segundos.'},
+  {id:'abdominales', nombre:'Abdominales 30s', unidad:'rep', icon:'💪', protocolo:'Tumbado boca arriba, manos en la nuca, codos abiertos. No se contabiliza si los codos se cierran o si tira de la cervical. Máximo de repeticiones correctas en 30 segundos.'},
+  {id:'salto', nombre:'Salto horizontal', unidad:'cm', icon:'↔️', protocolo:'Sin carrera previa, salto máximo hacia adelante con los dos pies juntos desde parado. Se mide la distancia hasta el talón más cercano.'},
+  {id:'lanz', nombre:'Lanzamiento balón medicinal', unidad:'m', icon:'🏐', protocolo:'De pie, sin sentarse y sin saltar. Lanzamiento a dos manos por encima de la cabeza. Se mide la distancia alcanzada.'},
+  {id:'flex', nombre:'Test de flexibilidad', unidad:'cm', icon:'🧘', protocolo:'Piernas abiertas a la anchura de la cadera, flexión profunda de piernas y tronco hasta llevar los brazos atrás, entre las piernas.'},
+  {id:'navette', nombre:'Resistencia · Course Navette', unidad:'periodo', icon:'🫀', protocolo:'Ida y vuelta en 20 metros siguiendo el ritmo sonoro, hasta no poder mantener el ritmo. Se anota el último periodo completado.'}
+];
+
+const ACTITUD_PREGUNTAS = [
+  {q:'Con el ejercicio físico...', opts:['Lo paso muy mal, pues no se me da bien','Lo paso mal si no me divierto','Disfruto siempre sea cual sea la actividad']},
+  {q:'Antes de ejercitarme o jugar...', opts:['No hago nada, empiezo y ya está','Caliento aunque no sé cómo hacerlo','Caliento bien']},
+  {q:'La asignatura de Educación Física...', opts:['No me gusta','Me da igual','Me agrada','Me gusta mucho','Es la que más me gusta']}
+];
+
+const CONOCIMIENTOS_DEFAULT = {
+  '4': [
+    {q:'¿Cuáles son las partes de una sesión práctica?', opts:['Calentamiento, parte principal, relajación','Recreación, parte principal, descanso','Calentamiento, parte principal, vuelta a la calma'], tipo:'single', correcta:2},
+    {q:'Elige dos sistemas de entrenamiento de la resistencia', opts:['Lanzamiento de balón','Carrera Contínua','Course Navette'], tipo:'multi', correcta:[1,2]},
+    {q:'¿Cuánto puede llegar a medir una pista de pádel?', opts:['10x10 metros','20x10 metros','30x10 metros'], tipo:'single', correcta:1},
+    {q:'¿Cuántas estrofas musicales tiene una sevillana?', opts:['2','3','5'], tipo:'single', correcta:0},
+    {q:'¿Qué puede generar la actividad física en nuestro organismo?', opts:['Aumenta el riesgo de padecer una enfermedad','Aumenta el riego sanguíneo','Aumenta nuestra grasa corporal'], tipo:'single', correcta:1},
+    {q:'Tipos de resistencia', opts:['aeróbica y anaeróbica','anaeróbica y aeróbic','Las dos respuestas anteriores son correctas'], tipo:'single', correcta:0},
+    {q:'Sistema defensivo en balonmano', opts:['5 y un hombre adelantado','7-0','En balonmano no hay sistemas defensivos'], tipo:'single', correcta:0},
+    {q:'¿Cuál de las siguientes actividades son deportes colectivos?', opts:['Fútbol, atletismo y hockey','Tenis, natación y voleibol','Balonmano, baloncesto y rugby'], tipo:'single', correcta:2},
+    {q:'Material en Hockey', opts:['Stick, bola o pastilla','Rodillera, stick y guantes','Casco, stick y pastillas'], tipo:'single', correcta:0},
+    {q:'Sistema de juego en baloncesto (elegir dos)', opts:['W','Zona','3-2'], tipo:'multi', correcta:[1,2]}
+  ],
+  '2': [
+    {q:'¿Qué dos tipos de calentamiento podemos llevar a cabo?', opts:['Calentamiento general y calentamiento dinámico','Calentamiento específico y calentamiento estático','Calentamiento específico y calentamiento general'], tipo:'single', correcta:2},
+    {q:'¿Cuántas partes tiene una sesión práctica?', opts:['3','2','4'], tipo:'single', correcta:0},
+    {q:'¿Cuál de los siguientes términos es una cualidad física?', opts:['Agilidad','Equilibrio','Fuerza'], tipo:'single', correcta:2},
+    {q:'¿Cuál de las siguientes prácticas se puede hacer en el medio natural?', opts:['Cabuyería','Indiaca','Florbal'], tipo:'single', correcta:0},
+    {q:'¿Cuáles son juegos alternativos?', opts:['Frisbee','Rayuela','Soga-tira'], tipo:'multi', correcta:[1,2]},
+    {q:'De los siguientes deportes, ¿cuál tiene mayor participación de jugadores?', opts:['Rugby touch','Balonmano','Fútbol'], tipo:'single', correcta:2},
+    {q:'¿Cuánto puede llegar a medir una pista de voleibol?', opts:['18x9 metros','20x10 metros','30x10 metros'], tipo:'single', correcta:0},
+    {q:'¿Cuántas estrofas musicales tiene una sevillana? (revisar clave, opciones sin 2)', opts:['3','6','4'], tipo:'single', correcta:0},
+    {q:'¿Qué puede generar la actividad física en nuestro organismo?', opts:['Aumenta el riesgo de padecer una enfermedad','Aumenta nuestra grasa corporal','Aumenta el riego sanguíneo'], tipo:'single', correcta:2},
+    {q:'¿Cuáles son los puntos cardinales que puede aparecer en una brújula?', opts:['Norte-Sur','Este-Oeste','Norte, Este, Oeste, Sur'], tipo:'single', correcta:2}
+  ]
+};
+
+let state = {
+  loading: true, role: null, profAuth: false,
+  anio: anioPorDefecto(),
+  view: 'inicio', curso: '', alumnoId: '', alumnoNombre: '',
+  wizardStep: 0,
+  alumnos: [], registros: {}, claves: null,
+  toast: '',
+  profTab: 'alumnos',
+  profBatCurso: '', profBatIdx: 0, profBatPrueba: null,
+  editingId: null
+};
+let refsActivos = [];
+
+function showToast(msg){ state.toast = msg; render(); setTimeout(()=>{state.toast='';render();},1800); }
+
+function loadData(){
+  refsActivos.forEach(r=>r.off());
+  refsActivos = [];
+  state.loading = true;
+  const rAlumnos = db.ref(pathBase()+'/alumnos');
+  rAlumnos.on('value', snap=>{
+    const d = snap.val();
+    state.alumnos = d ? Object.keys(d).map(k=>({id:k,...d[k]})) : [];
+    state.loading = false; render();
+  });
+  refsActivos.push(rAlumnos);
+  const rRegistros = db.ref(pathBase()+'/registros');
+  rRegistros.on('value', snap=>{
+    state.registros = snap.val() || {}; render();
+  });
+  refsActivos.push(rRegistros);
+  db.ref(pathBase()+'/claves').once('value').then(snap=>{
+    state.claves = snap.val() || CONOCIMIENTOS_DEFAULT;
+    if(!snap.val()) db.ref(pathBase()+'/claves').set(CONOCIMIENTOS_DEFAULT);
+    render();
+  });
+}
+function cambiarAnio(nuevo){
+  state.anio = nuevo;
+  state.alumnos = []; state.registros = {};
+  loadData();
+}
+
+function roundEscala(x){
+  const escala = [1,3,5,7,9];
+  let best = escala[0], dist = Math.abs(x-escala[0]);
+  escala.forEach(e=>{ const d=Math.abs(x-e); if(d<dist){dist=d;best=e;} });
+  return best;
+}
+
+function calcRuffierNota(p1,p2,p3){
+  const r = (p1+p2+p3-200)/10;
+  let franja, nota;
+  if(r<=3){franja='Excelente / muy bien';nota=9;}
+  else if(r<=5){franja='Bastante bien';nota=7;}
+  else if(r<=7){franja='Normal';nota=5;}
+  else if(r<=10){franja='Regular';nota=3;}
+  else {franja='A mejorar';nota=1;}
+  return {resultado:r.toFixed(1), franja, nota};
+}
+
+function calcNavetteNota(periodo, curso){
+  if(periodo===null||periodo===undefined||isNaN(periodo)) return null;
+  const maxPer = esCuarto(curso) ? 10 : 9;
+  let nota;
+  if(periodo<=3){
+    nota = (periodo/3)*5;
+  } else {
+    const pendiente = 5/(maxPer-3);
+    nota = 5 + (periodo-3)*pendiente;
+  }
+  nota = Math.max(0, Math.min(10, nota));
+  return nota;
+}
+
+function calcParticipacionNota(numHechas){
+  const tabla = {0:1,1:1,2:3,3:5,4:7,5:9,6:10};
+  return tabla[numHechas] !== undefined ? tabla[numHechas] : 1;
+}
+
+function calcActitudNota(respuestas){
+  if(!respuestas || respuestas.filter(r=>r!==null&&r!==undefined).length < ACTITUD_PREGUNTAS.length) return null;
+  let suma = 0;
+  ACTITUD_PREGUNTAS.forEach((p,i)=>{
+    const idx = respuestas[i];
+    const k = p.opts.length;
+    suma += 1 + idx*(8/(k-1));
+  });
+  return suma/ACTITUD_PREGUNTAS.length;
+}
+
+function calcConocimientosNota(respuestas, curso){
+  const clave = (state.claves||CONOCIMIENTOS_DEFAULT)[esCuarto(curso)?'4':'2'];
+  if(!respuestas || respuestas.length < clave.length) return null;
+  let aciertos = 0;
+  clave.forEach((p,i)=>{
+    const r = respuestas[i];
+    if(p.tipo==='single'){ if(r===p.correcta) aciertos++; }
+    else { if(Array.isArray(r) && r.length===p.correcta.length && r.every(x=>p.correcta.includes(x))) aciertos++; }
+  });
+  const pct = aciertos/clave.length;
+  if(pct<=0.2) return 1; if(pct<=0.4) return 3; if(pct<=0.6) return 5; if(pct<=0.8) return 7; return 9;
+}
+
+function calcBateriaNota(reg, curso){
+  if(!reg) return null;
+  const hechas = PRUEBAS_BATERIA.filter(p=>p.id!=='navette' && reg[p.id]!==undefined && reg[p.id]!==null && reg[p.id]!=='').length
+               + (reg.navette!==undefined && reg.navette!==null && reg.navette!=='' ? 1 : 0);
+  const part = calcParticipacionNota(hechas);
+  const nav = calcNavetteNota(reg.navette, curso);
+  if(nav===null) return part;
+  return (part+nav)/2;
+}
+
+function calcNotaFinal(alumnoId){
+  const reg = state.registros[alumnoId] || {};
+  const alumno = state.alumnos.find(a=>a.id===alumnoId);
+  if(!alumno) return null;
+  const rConoc = calcConocimientosNota(reg.conocimientos, alumno.curso);
+  const rRuf = reg.ruffier ? calcRuffierNota(reg.ruffier.p1,reg.ruffier.p2,reg.ruffier.p3).nota : null;
+  const rBat = calcBateriaNota(reg.bateria, alumno.curso);
+  const rAct = calcActitudNota(reg.actitud);
+  const partes = [rConoc, rRuf, rBat, rAct].filter(x=>x!==null && x!==undefined);
+  if(partes.length===0) return null;
+  const media = partes.reduce((a,b)=>a+b,0)/partes.length;
+  return { conoc:rConoc, ruf:rRuf, bat:rBat, act:rAct, final: roundEscala(media), completo: partes.length===4 };
+}
+
+function badgeClass(n){ if(n>=8) return 'b9'; if(n>=6) return 'b7'; if(n>=4) return 'b5'; if(n>=2) return 'b3'; return 'b1'; }
+
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+  if(state.toast) html += '<div class="toast">'+state.toast+'</div>';
+  if(state.loading){ app.innerHTML = '<div class="loading">Conectando con Firebase...</div>'; return; }
+
+  html += '<div class="header"><h1>Evaluación Inicial · EF</h1><small>Salesianos Triana'+(MODO_DEMO?' · MODO DEMO (sin guardar, configura Firebase)':'')+'</small>';
+  html += '<div style="margin-top:8px;"><select onchange="cambiarAnio(this.value)" style="width:auto;padding:5px 8px;font-size:0.8rem;">';
+  ANIOS.forEach(a=>{ html += '<option'+(state.anio===a?' selected':'')+'>'+a+'</option>'; });
+  html += '</select></div></div><div class="wrap">';
+
+  if(state.view==='inicio') html += viewInicio();
+  else if(state.view==='wizard') html += viewWizard();
+  else if(state.view==='resultado') html += viewResultado();
+  else if(state.view==='profesor') html += viewProfesor();
+
+  html += '</div>';
+  app.innerHTML = html;
+}
+
+function viewInicio(){
+  let h = '<div class="card"><h2>¿Quién eres?</h2><div class="navrow" style="margin-top:10px;">';
+  h += '<button class="full" onclick="state.role=\'alumno\';state.view=\'wizard\';state.wizardStep=0;render()">Soy alumno/a</button>';
+  h += '</div></div>';
+  h += '<div class="card"><h2>Acceso profesor</h2><input type="password" id="prof-pass" placeholder="Contraseña"><button class="full" style="margin-top:10px;" onclick="loginProfesor()">Entrar</button></div>';
+  return h;
+}
+function loginProfesor(){
+  const p = document.getElementById('prof-pass').value;
+  if(p===PROF_PASS){ state.role='profesor'; state.profAuth=true; state.view='profesor'; render(); }
+  else showToast('Contraseña incorrecta');
+}
+
+function viewWizard(){
+  const total = 6;
+  let h = '<div class="lanes">';
+  for(let i=0;i<total;i++) h += '<div class="lane '+(i<state.wizardStep?'done':i===state.wizardStep?'active':'')+'"></div>';
+  h += '</div><div class="lane-labels"><span>Datos</span><span>Médico</span><span>Ruffier</span><span>Batería</span><span>Hábitos</span><span>Saber</span></div>';
+
+  if(state.wizardStep===0) h += stepDatos();
+  else if(state.wizardStep===1) h += stepMedico();
+  else if(state.wizardStep===2) h += stepRuffier();
+  else if(state.wizardStep===3) h += stepBateria();
+  else if(state.wizardStep===4) h += stepActitud();
+  else if(state.wizardStep===5) h += stepConocimientos();
+
+  h += '<div class="navrow"><button class="ghost" onclick="wizNav(-1)">Atrás</button><button onclick="wizNav(1)">'+(state.wizardStep===5?'Finalizar':'Siguiente')+'</button></div>';
+  return h;
+}
+
+function ensureAlumno(){
+  if(!state.draft) state.draft = {};
+}
+ensureAlumno();
+
+function stepDatos(){
+  ensureAlumno();
+  const d = state.draft;
+  let h = '<div class="card"><h2>01 · Datos del alumno</h2><p class="desc">Elige tu grupo y busca tu nombre en la lista. Si no apareces, avisa a tu profesor para que te añada antes de continuar.</p>';
+  h += '<label>Grupo</label><select id="d-grupo" onchange="cambiarGrupoDraft(this.value)">';
+  CURSOS.forEach(c=>{ h += '<option'+(d.curso===c?' selected':'')+'>'+c+'</option>'; });
+  h += '</select>';
+  const grupoActual = d.curso || CURSOS[0];
+  const alumnosGrupo = state.alumnos.filter(a=>a.curso===grupoActual);
+  h += '<label>Tu nombre</label>';
+  if(alumnosGrupo.length===0){
+    h += '<p class="desc" style="color:#C4432E;">Todavía no hay alumnos añadidos en '+grupoActual+'. Pide a tu profesor que te incluya en la lista.</p>';
+  } else {
+    h += '<div class="opts">';
+    alumnosGrupo.forEach(a=>{
+      h += '<div class="opt '+(d.alumnoId===a.id?'sel':'')+'" onclick="elegirAlumnoDraft(\''+a.id+'\',\''+a.nombre.replace(/'/g,"\\'")+'\')">'+a.nombre+'</div>';
+    });
+    h += '</div>';
+  }
+  if(d.alumnoId) h += '<p class="small" style="margin-top:10px;font-weight:600;color:#255432;">Vas a continuar como: '+d.nombre+'</p>';
+  h += '<label>¿Has repetido algún curso?</label><input type="text" id="d-repite" value="'+(d.repite||'')+'" placeholder="No / Sí, cuál">';
+  h += '<label>Tus principales aficiones</label><input type="text" id="d-aficiones" value="'+(d.aficiones||'')+'">';
+  h += '</div>';
+  return h;
+}
+function cambiarGrupoDraft(curso){ state.draft.curso = curso; state.draft.alumnoId = null; state.draft.nombre = ''; render(); }
+function elegirAlumnoDraft(id,nombre){ state.draft.alumnoId = id; state.draft.nombre = nombre; render(); }
+function stepMedico(){
+  ensureAlumno();
+  const d = state.draft;
+  let h = '<div class="card"><h2>02 · Datos médicos</h2><p class="desc">Solo para tu seguridad. No puntúa.</p>';
+  h += optGroup('m-enf','¿Padeces alguna enfermedad?',['Sí','No'], d.enfermedad);
+  h += '<label>¿Cuál? (si aplica)</label><input type="text" id="m-enf-cual" value="'+(d.enfermedadCual||'')+'">';
+  h += optGroup('m-op','¿Estás operado/a de algo?',['Sí','No'], d.operado);
+  h += '</div>';
+  return h;
+}
+function stepRuffier(){
+  ensureAlumno();
+  const d = state.draft;
+  let h = '<div class="card"><h2>03 · Ruffier-Dickson</h2><p class="desc">Criterio independiente · 25% de la nota.</p>';
+  h += '<div class="grid2"><div><label>Peso (kg)</label><input type="number" id="r-peso" value="'+(d.peso||'')+'"></div><div><label>Talla (m)</label><input type="number" step="0.01" id="r-talla" value="'+(d.talla||'')+'"></div></div>';
+  h += '<label>Pulso en reposo</label><input type="number" id="r-p1" value="'+(d.p1||'')+'" onchange="wizRuffierPreview()">';
+  h += '<div class="desc">30 flexiones de piernas en 45s, de pie.</div>';
+  h += '<div class="grid2"><div><label>Pulso al terminar</label><input type="number" id="r-p2" value="'+(d.p2||'')+'" onchange="wizRuffierPreview()"></div><div><label>Pulso 1 min después</label><input type="number" id="r-p3" value="'+(d.p3||'')+'" onchange="wizRuffierPreview()"></div></div>';
+  h += '<p class="small" id="ruffier-preview" style="margin-top:8px;font-weight:600;">'+ (d.p1&&d.p2&&d.p3 ? rufTxt(d.p1,d.p2,d.p3) : 'Resultado: —') +'</p>';
+  h += '</div>';
+  return h;
+}
+function rufTxt(p1,p2,p3){ const r=calcRuffierNota(parseFloat(p1),parseFloat(p2),parseFloat(p3)); return 'Resultado: '+r.resultado+' · '+r.franja; }
+function wizRuffierPreview(){
+  const p1=document.getElementById('r-p1').value, p2=document.getElementById('r-p2').value, p3=document.getElementById('r-p3').value;
+  if(p1&&p2&&p3) document.getElementById('ruffier-preview').textContent = rufTxt(p1,p2,p3);
+}
+
+function stepBateria(){
+  ensureAlumno();
+  if(!state.draft.bateria) state.draft.bateria = {};
+  const b = state.draft.bateria;
+  const hechas = PRUEBAS_BATERIA.filter(p=>b[p.id]!==undefined && b[p.id]!=='').length;
+  let h = '<div class="card"><h2>04 · Batería de pruebas</h2><p class="desc">Criterio independiente · 25%. Pide a tu profesor que confirme tus marcas si las mide él.</p>';
+  h += '<p class="small" style="margin-bottom:10px;font-weight:600;">Completadas: '+hechas+' / 6</p>';
+  h += '<div class="prueba-grid">';
+  PRUEBAS_BATERIA.forEach(p=>{
+    h += '<div class="prueba-btn '+(state.draft.pruebaSel===p.id?'sel':'')+' '+(b[p.id]!==undefined&&b[p.id]!==''?'done':'')+'" onclick="selPrueba(\''+p.id+'\')"><span class="pi">'+p.icon+'</span>'+p.nombre+'<br><span class="small">'+p.unidad+'</span></div>';
+  });
+  h += '</div>';
+  if(state.draft.pruebaSel){
+    const p = PRUEBAS_BATERIA.find(x=>x.id===state.draft.pruebaSel);
+    h += '<div style="margin-top:14px;"><label>'+p.nombre+' ('+p.unidad+')</label><p class="desc">'+p.protocolo+'</p>';
+    h += '<input type="number" step="0.1" class="big-input" id="bat-valor" value="'+(b[p.id]||'')+'" onchange="guardarPrueba()"></div>';
+  }
+  h += '</div>';
+  return h;
+}
+function selPrueba(id){ state.draft.pruebaSel = id; render(); }
+function guardarPrueba(){
+  const v = parseFloat(document.getElementById('bat-valor').value);
+  if(isNaN(v)) return;
+  if(!state.draft.bateria) state.draft.bateria = {};
+  state.draft.bateria[state.draft.pruebaSel] = v;
+  showToast('Guardado');
+  render();
+}
+
+function stepActitud(){
+  ensureAlumno();
+  if(!state.draft.actitud) state.draft.actitud = [];
+  let h = '<div class="card"><h2>05 · Actitud y hábitos</h2><p class="desc">Criterio independiente · 25%.</p>';
+  ACTITUD_PREGUNTAS.forEach((p,i)=>{
+    h += '<label>'+p.q+'</label><div class="opts">';
+    p.opts.forEach((o,j)=>{
+      h += '<div class="opt '+(state.draft.actitud[i]===j?'sel':'')+'" onclick="setActitud('+i+','+j+')">'+o+'</div>';
+    });
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+function setActitud(i,j){ state.draft.actitud[i]=j; render(); }
+
+function stepConocimientos(){
+  ensureAlumno();
+  if(!state.draft.conocimientos) state.draft.conocimientos = [];
+  const clave = (state.claves||CONOCIMIENTOS_DEFAULT)[esCuarto(state.draft.curso||CURSOS[0])?'4':'2'];
+  let h = '<div class="card"><h2>06 · Conocimientos previos</h2><p class="desc">Criterio independiente · 25%.</p>';
+  clave.forEach((p,i)=>{
+    h += '<label>'+(i+1)+'. '+p.q+(p.tipo==='multi'?' (elige dos)':'')+'</label><div class="opts">';
+    p.opts.forEach((o,j)=>{
+      const sel = p.tipo==='single' ? state.draft.conocimientos[i]===j : (Array.isArray(state.draft.conocimientos[i])&&state.draft.conocimientos[i].includes(j));
+      h += '<div class="opt '+(sel?'sel':'')+'" onclick="setConoc('+i+','+j+',\''+p.tipo+'\')">'+o+'</div>';
+    });
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+function setConoc(i,j,tipo){
+  if(tipo==='single'){ state.draft.conocimientos[i]=j; }
+  else {
+    if(!Array.isArray(state.draft.conocimientos[i])) state.draft.conocimientos[i]=[];
+    const arr = state.draft.conocimientos[i];
+    const idx = arr.indexOf(j);
+    if(idx>-1) arr.splice(idx,1); else { if(arr.length<2) arr.push(j); else { arr.shift(); arr.push(j);} }
+  }
+  render();
+}
+
+function optGroup(name,label,opts,current){
+  let h = '<label>'+label+'</label><div class="opts">';
+  opts.forEach(o=>{ h += '<div class="opt '+(current===o?'sel':'')+'" onclick="setDraftOpt(\''+name+'\',\''+o+'\')">'+o+'</div>'; });
+  h += '</div>';
+  return h;
+}
+function setDraftOpt(name,val){
+  if(name==='m-enf') state.draft.enfermedad = val;
+  if(name==='m-op') state.draft.operado = val;
+  render();
+}
+
+function wizNav(dir){
+  const d = state.draft;
+  if(dir===1){
+    if(state.wizardStep===0){
+      d.curso = document.getElementById('d-grupo').value;
+      d.repite = document.getElementById('d-repite').value;
+      d.aficiones = document.getElementById('d-aficiones').value;
+      if(!d.alumnoId){ showToast('Elige tu nombre en la lista'); return; }
+    }
+    if(state.wizardStep===1){
+      d.enfermedadCual = document.getElementById('m-enf-cual').value;
+    }
+    if(state.wizardStep===2){
+      d.peso = document.getElementById('r-peso').value;
+      d.talla = document.getElementById('r-talla').value;
+      d.p1 = document.getElementById('r-p1').value;
+      d.p2 = document.getElementById('r-p2').value;
+      d.p3 = document.getElementById('r-p3').value;
+    }
+  }
+  if(dir===1 && state.wizardStep===5){ finalizarWizard(); return; }
+  if(dir===-1 && state.wizardStep===0){ state.view='inicio'; state.draft={}; render(); return; }
+  state.wizardStep = Math.max(0, Math.min(5, state.wizardStep+dir));
+  render();
+}
+
+function finalizarWizard(){
+  const d = state.draft;
+  const alumnoId = d.alumnoId;
+  db.ref(pathBase()+'/alumnos/'+alumnoId).update({ repite:d.repite||'', aficiones:d.aficiones||'' });
+  const registro = {
+    medico: { enfermedad:d.enfermedad||'', enfermedadCual:d.enfermedadCual||'', operado:d.operado||'' },
+    ruffier: (d.p1&&d.p2&&d.p3) ? { peso:d.peso, talla:d.talla, p1:parseFloat(d.p1), p2:parseFloat(d.p2), p3:parseFloat(d.p3) } : null,
+    bateria: d.bateria || {},
+    actitud: d.actitud || [],
+    conocimientos: d.conocimientos || [],
+    fecha: new Date().toISOString()
+  };
+  db.ref(pathBase()+'/registros/'+alumnoId).set(registro);
+  state.alumnoId = alumnoId;
+  state.view = 'resultado';
+  state.draft = {};
+  render();
+}
+
+function viewResultado(){
+  const r = calcNotaFinal(state.alumnoId);
+  if(!r) return '<div class="card">Calculando...</div>';
+  let h = '<div class="scoreboard"><p class="eyebrow">Nota de evaluación inicial</p><div class="bignum">'+r.final+'</div><p class="small" style="color:#B7BEBA;">Escala 1 · 3 · 5 · 7 · 9</p>';
+  h += '<div class="criteria-row">';
+  h += '<div class="crit"><div class="v">'+(r.conoc!==null?r.conoc:'—')+'</div><div class="l">Conocim.</div></div>';
+  h += '<div class="crit"><div class="v">'+(r.ruf!==null?r.ruf:'—')+'</div><div class="l">Ruffier</div></div>';
+  h += '<div class="crit"><div class="v">'+(r.bat!==null?r.bat.toFixed(1):'—')+'</div><div class="l">Batería</div></div>';
+  h += '<div class="crit"><div class="v">'+(r.act!==null?r.act.toFixed(1):'—')+'</div><div class="l">Hábitos</div></div>';
+  h += '</div></div>';
+  h += '<div class="card"><p class="desc" style="margin:0;">Gracias. Tu profesor tiene ya estos datos guardados y los usará como punto de partida del curso.</p></div>';
+  return h;
+}
+
+function viewProfesor(){
+  let h = '<div class="tabs">';
+  ['alumnos','bateria','registros','claves'].forEach(t=>{
+    h += '<div class="tab '+(state.profTab===t?'active':'')+'" onclick="state.profTab=\''+t+'\';render()">'+t.charAt(0).toUpperCase()+t.slice(1)+'</div>';
+  });
+  h += '</div>';
+  if(state.profTab==='alumnos') h += profAlumnos();
+  else if(state.profTab==='bateria') h += profBateria();
+  else if(state.profTab==='registros') h += profRegistros();
+  else if(state.profTab==='claves') h += profClaves();
+  return h;
+}
+
+function profAlumnos(){
+  let h = '<div class="card"><h2>Añadir alumno</h2>';
+  h += '<input type="text" id="na-nombre" placeholder="Nombre y apellidos" style="margin-bottom:8px;">';
+  h += '<select id="na-curso">';
+  CURSOS.forEach(c=>{ h += '<option>'+c+'</option>'; });
+  h += '</select><button class="full" style="margin-top:10px;" onclick="addAlumnoProf()">+ Añadir</button>';
+  h += '<button class="full ghost" style="margin-top:8px;" onclick="sembrar4ESO()">Sembrar listas 4º ESO (A/B/C)</button></div>';
+  CURSOS.forEach(curso=>{
+    const als = state.alumnos.filter(a=>a.curso===curso);
+    if(als.length===0) return;
+    h += '<div class="card"><h2 style="font-size:1rem;">'+curso+' ('+als.length+')</h2>';
+    als.forEach(a=>{
+      h += '<div class="list-item"><span>'+a.nombre+'</span><button class="delete-btn" onclick="delAlumno(\''+a.id+'\')">✕</button></div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+function addAlumnoProf(){
+  const nombre = document.getElementById('na-nombre').value.trim();
+  const curso = document.getElementById('na-curso').value;
+  if(!nombre) return;
+  db.ref(pathBase()+'/alumnos').push({nombre,curso});
+  showToast('Alumno añadido');
+}
+function delAlumno(id){
+  db.ref(pathBase()+'/alumnos/'+id).remove();
+  db.ref(pathBase()+'/registros/'+id).remove();
+  showToast('Eliminado');
+}
+function sembrar4ESO(){
+  const grupos = [['4º A ESO',ALUMNOS_SEED_4A],['4º B ESO',ALUMNOS_SEED_4B],['4º C ESO',ALUMNOS_SEED_4C]];
+  grupos.forEach(([curso,lista])=>{
+    lista.forEach(nombre=>{
+      const yaExiste = state.alumnos.some(a=>a.nombre===nombre && a.curso===curso);
+      if(!yaExiste) db.ref(pathBase()+'/alumnos').push({nombre,curso});
+    });
+  });
+  showToast('Listas de 4º ESO importadas');
+}
+
+function profBateria(){
+  let h = '<div class="card"><h2>Introducir batería (modo profesor)</h2><p class="desc">Selecciona grupo, ve alumno por alumno y guarda cada prueba.</p>';
+  h += '<select id="pb-curso" onchange="state.profBatCurso=this.value;state.profBatIdx=0;render()">';
+  h += '<option value="">Selecciona grupo...</option>';
+  CURSOS.forEach(c=>{ h += '<option'+(state.profBatCurso===c?' selected':'')+'>'+c+'</option>'; });
+  h += '</select></div>';
+  if(!state.profBatCurso) return h;
+  const als = state.alumnos.filter(a=>a.curso===state.profBatCurso);
+  if(als.length===0){ h += '<div class="card">No hay alumnos en este grupo todavía.</div>'; return h; }
+  if(state.profBatIdx>=als.length) state.profBatIdx=0;
+  const al = als[state.profBatIdx];
+  const reg = state.registros[al.id] || {};
+  const bat = reg.bateria || {};
+  const hechas = PRUEBAS_BATERIA.filter(p=>bat[p.id]!==undefined && bat[p.id]!=='').length;
+  h += '<div class="card"><div class="pill">'+al.nombre+'</div>';
+  h += '<p class="small" style="font-weight:600;margin-bottom:8px;">Completadas: '+hechas+' / 6 &nbsp; ('+(state.profBatIdx+1)+'/'+als.length+' alumnos)</p>';
+  h += '<div class="prueba-grid">';
+  PRUEBAS_BATERIA.forEach(p=>{
+    h += '<div class="prueba-btn '+(state.profBatPrueba===p.id?'sel':'')+' '+(bat[p.id]!==undefined&&bat[p.id]!==''?'done':'')+'" onclick="state.profBatPrueba=\''+p.id+'\';render()"><span class="pi">'+p.icon+'</span>'+p.nombre+'<br><span class="small">'+p.unidad+'</span></div>';
+  });
+  h += '</div>';
+  if(state.profBatPrueba){
+    const p = PRUEBAS_BATERIA.find(x=>x.id===state.profBatPrueba);
+    h += '<div style="margin-top:14px;"><label>'+p.nombre+' ('+p.unidad+')</label><input type="number" step="0.1" class="big-input" id="pb-valor" value="'+(bat[p.id]||'')+'">';
+    h += '<button class="full" style="margin-top:10px;" onclick="guardarPruebaProf(\''+al.id+'\')">Guardar</button></div>';
+  }
+  h += '<div class="navrow" style="margin-top:14px;"><button class="ghost" onclick="state.profBatIdx=Math.max(0,state.profBatIdx-1);state.profBatPrueba=null;render()">Alumno anterior</button><button onclick="siguienteAlumnoBateria('+als.length+')">Siguiente alumno</button></div>';
+  h += '</div>';
+  return h;
+}
+function siguienteAlumnoBateria(total){
+  state.profBatIdx = Math.min(total-1, state.profBatIdx+1);
+  state.profBatPrueba = null;
+  render();
+}
+function guardarPruebaProf(alumnoId){
+  const v = parseFloat(document.getElementById('pb-valor').value);
+  if(isNaN(v)) return;
+  db.ref(pathBase()+'/registros/'+alumnoId+'/bateria/'+state.profBatPrueba).set(v);
+  showToast('Guardado');
+}
+
+function profRegistros(){
+  let h = '';
+  CURSOS.forEach(curso=>{
+    const als = state.alumnos.filter(a=>a.curso===curso);
+    if(als.length===0) return;
+    h += '<div class="card"><h2 style="font-size:1rem;">'+curso+'</h2><table><tr><th>Alumno</th><th>Con.</th><th>Ruf.</th><th>Bat.</th><th>Háb.</th><th>Nota</th><th></th></tr>';
+    als.forEach(a=>{
+      const r = calcNotaFinal(a.id);
+      if(!r){ h += '<tr><td>'+a.nombre+'</td><td colspan="4" class="small">Sin datos</td><td></td><td></td></tr>'; return; }
+      h += '<tr><td>'+a.nombre+'</td><td>'+(r.conoc??'—')+'</td><td>'+(r.ruf??'—')+'</td><td>'+(r.bat?r.bat.toFixed(1):'—')+'</td><td>'+(r.act?r.act.toFixed(1):'—')+'</td>';
+      h += '<td><span class="badge '+badgeClass(r.final)+'">'+r.final+'</span></td>';
+      h += '<td><button class="ghost" style="padding:4px 8px;font-size:0.7rem;" onclick="editarAlumno(\''+a.id+'\')">Editar</button></td></tr>';
+    });
+    h += '</table></div>';
+  });
+  h += '<div class="card"><button class="full" onclick="exportarCSV()">Exportar CSV</button></div>';
+  if(state.editingId) h += profEditarModal();
+  return h;
+}
+function editarAlumno(id){ state.editingId = id; render(); }
+function profEditarModal(){
+  const a = state.alumnos.find(x=>x.id===state.editingId);
+  if(!a) return '';
+  let h = '<div class="card"><h2>Editar: '+a.nombre+'</h2>';
+  h += '<label>Nombre</label><input type="text" id="ed-nombre" value="'+a.nombre+'">';
+  h += '<label>Grupo</label><select id="ed-curso">';
+  CURSOS.forEach(c=>{ h += '<option'+(a.curso===c?' selected':'')+'>'+c+'</option>'; });
+  h += '</select>';
+  h += '<div class="navrow" style="margin-top:12px;"><button class="ghost" onclick="state.editingId=null;render()">Cancelar</button><button onclick="guardarEdicionAlumno()">Guardar</button></div></div>';
+  return h;
+}
+function guardarEdicionAlumno(){
+  const nombre = document.getElementById('ed-nombre').value.trim();
+  const curso = document.getElementById('ed-curso').value;
+  db.ref(pathBase()+'/alumnos/'+state.editingId).update({nombre,curso});
+  state.editingId = null;
+  showToast('Actualizado');
+}
+function exportarCSV(){
+  let csv = 'Alumno,Curso,NotaConocimientos,NotaRuffier,NotaBateria,NotaHabitos,NotaFinal\n';
+  state.alumnos.forEach(a=>{
+    const r = calcNotaFinal(a.id);
+    if(!r) return;
+    csv += '"'+a.nombre+'",'+a.curso+','+(r.conoc??'')+','+(r.ruf??'')+','+(r.bat?r.bat.toFixed(1):'')+','+(r.act?r.act.toFixed(1):'')+','+r.final+'\n';
+  });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  link.download = 'evaluacion_inicial.csv';
+  link.click();
+}
+
+function profClaves(){
+  let h = '<div class="card"><p class="desc">Corrige aquí la respuesta correcta de cualquier pregunta de conocimientos, por curso.</p></div>';
+  ['4','2'].forEach(curso=>{
+    const clave = (state.claves||CONOCIMIENTOS_DEFAULT)[curso];
+    h += '<div class="card"><h2 style="font-size:1rem;">'+(curso==='4'?'4º ESO':'2º ESO')+'</h2>';
+    clave.forEach((p,i)=>{
+      h += '<div class="editrow"><span style="flex:1;">'+(i+1)+'. '+p.q+'</span>';
+      if(p.tipo==='single'){
+        h += '<select onchange="setClaveCorrecta(\''+curso+'\','+i+',this.value,\'single\')">';
+        p.opts.forEach((o,j)=>{ h += '<option value="'+j+'"'+(p.correcta===j?' selected':'')+'>'+o+'</option>'; });
+        h += '</select>';
+      } else {
+        h += '<span class="small">Multi: '+p.correcta.map(j=>p.opts[j]).join(' + ')+'</span>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+function setClaveCorrecta(curso,idx,val,tipo){
+  const claves = JSON.parse(JSON.stringify(state.claves||CONOCIMIENTOS_DEFAULT));
+  claves[curso][idx].correcta = parseInt(val);
+  db.ref(pathBase()+'/claves').set(claves);
+  showToast('Clave actualizada');
+}
+
+loadData();
+</script>
+</body>
+</html>

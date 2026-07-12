@@ -71,7 +71,6 @@ th { color: #6B7280; font-size: 0.65rem; text-transform: uppercase; }
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyD9ecpDNBaimEYjtwhNA7ol-1SOYesI1RY",
@@ -122,7 +121,10 @@ const PROF_PASS = "triana26";
 const CURSOS = ['4º A ESO','4º B ESO','4º C ESO','2º A ESO','2º B ESO','2º C ESO'];
 const ANIOS = ['2025-2026','2026-2027','2027-2028','2028-2029'];
 function anioPorDefecto(){
-  return '2026-2027';
+  const hoy = new Date();
+  const y = hoy.getMonth() >= 7 ? hoy.getFullYear() : hoy.getFullYear()-1;
+  const etiqueta = y+'-'+(y+1);
+  return ANIOS.includes(etiqueta) ? etiqueta : ANIOS[0];
 }
 function pathBase(){ return 'evalinicial/'+state.anio; }
 function esCuarto(curso){ return curso.startsWith('4'); }
@@ -151,7 +153,7 @@ const CONOCIMIENTOS_DEFAULT = {
     {q:'¿Cuáles son las partes de una sesión práctica?', opts:['Calentamiento, parte principal, relajación','Recreación, parte principal, descanso','Calentamiento, parte principal, vuelta a la calma'], tipo:'single', correcta:2},
     {q:'Elige dos sistemas de entrenamiento de la resistencia', opts:['Lanzamiento de balón','Carrera Contínua','Course Navette'], tipo:'multi', correcta:[1,2]},
     {q:'¿Cuánto puede llegar a medir una pista de pádel?', opts:['10x10 metros','20x10 metros','30x10 metros'], tipo:'single', correcta:1},
-    {q:'¿Cuántas estrofas musicales tiene una sevillana?', opts:['2','3','5'], tipo:'single', correcta:0},
+    {q:'¿Cuántas estrofas musicales tiene una sevillana?', opts:['2','3','5'], tipo:'single', correcta:1},
     {q:'¿Qué puede generar la actividad física en nuestro organismo?', opts:['Aumenta el riesgo de padecer una enfermedad','Aumenta el riego sanguíneo','Aumenta nuestra grasa corporal'], tipo:'single', correcta:1},
     {q:'Tipos de resistencia', opts:['aeróbica y anaeróbica','anaeróbica y aeróbic','Las dos respuestas anteriores son correctas'], tipo:'single', correcta:0},
     {q:'Sistema defensivo en balonmano', opts:['5 y un hombre adelantado','7-0','En balonmano no hay sistemas defensivos'], tipo:'single', correcta:0},
@@ -237,14 +239,9 @@ function calcRuffierNota(p1,p2,p3){
 function calcNavetteNota(periodo, curso){
   if(periodo===null||periodo===undefined||isNaN(periodo)) return null;
   const maxPer = esCuarto(curso) ? 10 : 9;
-  let nota;
-  if(periodo<=3){
-    nota = (periodo/3)*5;
-  } else {
-    const pendiente = 5/(maxPer-3);
-    nota = 5 + (periodo-3)*pendiente;
-  }
-  nota = Math.max(0, Math.min(10, nota));
+  const pendiente = 5/(maxPer-3);
+  let nota = 5 + (periodo-3)*pendiente;
+  nota = Math.max(1, Math.min(10, nota));
   return nota;
 }
 
@@ -278,13 +275,13 @@ function calcConocimientosNota(respuestas, curso){
 }
 
 function calcBateriaNota(reg, curso){
-  if(!reg) return null;
+  if(!reg) return { part:null, nav:null, combinada:null };
   const hechas = PRUEBAS_BATERIA.filter(p=>p.id!=='navette' && reg[p.id]!==undefined && reg[p.id]!==null && reg[p.id]!=='').length
                + (reg.navette!==undefined && reg.navette!==null && reg.navette!=='' ? 1 : 0);
   const part = calcParticipacionNota(hechas);
   const nav = calcNavetteNota(reg.navette, curso);
-  if(nav===null) return part;
-  return (part+nav)/2;
+  const combinada = (nav===null) ? part : (part+nav)/2;
+  return { part, nav, combinada };
 }
 
 function calcNotaFinal(alumnoId){
@@ -293,12 +290,13 @@ function calcNotaFinal(alumnoId){
   if(!alumno) return null;
   const rConoc = calcConocimientosNota(reg.conocimientos, alumno.curso);
   const rRuf = reg.ruffier ? calcRuffierNota(reg.ruffier.p1,reg.ruffier.p2,reg.ruffier.p3).nota : null;
-  const rBat = calcBateriaNota(reg.bateria, alumno.curso);
+  const bateriaInfo = calcBateriaNota(reg.bateria, alumno.curso);
+  const rBat = bateriaInfo.combinada;
   const rAct = calcActitudNota(reg.actitud);
   const partes = [rConoc, rRuf, rBat, rAct].filter(x=>x!==null && x!==undefined);
   if(partes.length===0) return null;
   const media = partes.reduce((a,b)=>a+b,0)/partes.length;
-  return { conoc:rConoc, ruf:rRuf, bat:rBat, act:rAct, final: roundEscala(media), completo: partes.length===4 };
+  return { conoc:rConoc, ruf:rRuf, bat:rBat, navette:bateriaInfo.nav, part:bateriaInfo.part, act:rAct, final: roundEscala(media), completo: partes.length===4 };
 }
 
 function badgeClass(n){ if(n>=8) return 'b9'; if(n>=6) return 'b7'; if(n>=4) return 'b5'; if(n>=2) return 'b3'; return 'b1'; }
@@ -558,8 +556,7 @@ function viewResultado(){
 }
 
 function viewProfesor(){
-  let h = '<span class="back" onclick="state.role=null;state.profAuth=false;state.view=\'inicio\';state.profTab=\'alumnos\';render()">← Salir del modo profesor</span>';
-  h += '<div class="tabs">';
+  let h = '<div class="tabs">';
   ['alumnos','bateria','registros','claves'].forEach(t=>{
     h += '<div class="tab '+(state.profTab===t?'active':'')+'" onclick="state.profTab=\''+t+'\';render()">'+t.charAt(0).toUpperCase()+t.slice(1)+'</div>';
   });
@@ -659,38 +656,135 @@ function profRegistros(){
   CURSOS.forEach(curso=>{
     const als = state.alumnos.filter(a=>a.curso===curso);
     if(als.length===0) return;
-    h += '<div class="card"><h2 style="font-size:1rem;">'+curso+'</h2><table><tr><th>Alumno</th><th>Con.</th><th>Ruf.</th><th>Bat.</th><th>Háb.</th><th>Nota</th><th></th></tr>';
+    h += '<div class="card"><h2 style="font-size:1rem;">'+curso+'</h2><table><tr><th>Alumno</th><th>Con.</th><th>Ruf.</th><th>Navette</th><th>Bat.</th><th>Háb.</th><th>Nota</th><th></th></tr>';
     als.forEach(a=>{
       const r = calcNotaFinal(a.id);
-      if(!r){ h += '<tr><td>'+a.nombre+'</td><td colspan="4" class="small">Sin datos</td><td></td><td></td></tr>'; return; }
-      h += '<tr><td>'+a.nombre+'</td><td>'+(r.conoc??'—')+'</td><td>'+(r.ruf??'—')+'</td><td>'+(r.bat?r.bat.toFixed(1):'—')+'</td><td>'+(r.act?r.act.toFixed(1):'—')+'</td>';
+      if(!r){ h += '<tr><td>'+a.nombre+'</td><td colspan="5" class="small">Sin datos</td><td></td><td><button class="ghost" style="padding:4px 8px;font-size:0.7rem;" onclick="verFicha(\''+a.id+'\')">Ver ficha</button></td></tr>'; return; }
+      h += '<tr><td>'+a.nombre+'</td><td>'+(r.conoc??'—')+'</td><td>'+(r.ruf??'—')+'</td><td>'+(r.navette!==null&&r.navette!==undefined?r.navette.toFixed(1):'—')+'</td><td>'+(r.bat?r.bat.toFixed(1):'—')+'</td><td>'+(r.act?r.act.toFixed(1):'—')+'</td>';
       h += '<td><span class="badge '+badgeClass(r.final)+'">'+r.final+'</span></td>';
-      h += '<td><button class="ghost" style="padding:4px 8px;font-size:0.7rem;" onclick="editarAlumno(\''+a.id+'\')">Editar</button></td></tr>';
+      h += '<td><button class="ghost" style="padding:4px 8px;font-size:0.7rem;" onclick="verFicha(\''+a.id+'\')">Ver ficha</button></td></tr>';
     });
     h += '</table></div>';
   });
   h += '<div class="card"><button class="full" onclick="exportarCSV()">Exportar CSV</button></div>';
-  if(state.editingId) h += profEditarModal();
+  if(state.editingId) h += profFicha();
   return h;
 }
-function editarAlumno(id){ state.editingId = id; render(); }
-function profEditarModal(){
+function verFicha(id){ state.editingId = id; render(); }
+function profFicha(){
   const a = state.alumnos.find(x=>x.id===state.editingId);
   if(!a) return '';
-  let h = '<div class="card"><h2>Editar: '+a.nombre+'</h2>';
-  h += '<label>Nombre</label><input type="text" id="ed-nombre" value="'+a.nombre+'">';
-  h += '<label>Grupo</label><select id="ed-curso">';
+  const reg = state.registros[state.editingId] || {};
+  const bat = reg.bateria || {};
+  const ruf = reg.ruffier || {};
+  const clave = (state.claves||CONOCIMIENTOS_DEFAULT)[esCuarto(a.curso)?'4':'2'];
+  const respConoc = reg.conocimientos || [];
+  const respAct = reg.actitud || [];
+  const navNota = calcNavetteNota(bat.navette, a.curso);
+  const rufCalc = (ruf.p1&&ruf.p2&&ruf.p3) ? calcRuffierNota(parseFloat(ruf.p1),parseFloat(ruf.p2),parseFloat(ruf.p3)) : null;
+
+  let h = '<div class="card"><span class="back" onclick="state.editingId=null;render()">← Cerrar ficha</span><h2>'+a.nombre+'</h2>';
+
+  h += '<label>Nombre</label><input type="text" id="fi-nombre" value="'+a.nombre+'">';
+  h += '<label>Grupo</label><select id="fi-curso">';
   CURSOS.forEach(c=>{ h += '<option'+(a.curso===c?' selected':'')+'>'+c+'</option>'; });
   h += '</select>';
-  h += '<div class="navrow" style="margin-top:12px;"><button class="ghost" onclick="state.editingId=null;render()">Cancelar</button><button onclick="guardarEdicionAlumno()">Guardar</button></div></div>';
+  h += '<label>¿Ha repetido curso?</label><input type="text" id="fi-repite" value="'+(a.repite||'')+'">';
+  h += '<label>Aficiones</label><input type="text" id="fi-aficiones" value="'+(a.aficiones||'')+'">';
+  h += '</div>';
+
+  h += '<div class="card"><h2 style="font-size:1rem;">Datos médicos</h2>';
+  h += '<label>¿Enfermedad?</label><select id="fi-enf"><option value="Sí"'+(reg.medico&&reg.medico.enfermedad==='Sí'?' selected':'')+'>Sí</option><option value="No"'+(!reg.medico||reg.medico.enfermedad!=='Sí'?' selected':'')+'>No</option></select>';
+  h += '<label>¿Cuál?</label><input type="text" id="fi-enf-cual" value="'+((reg.medico&&reg.medico.enfermedadCual)||'')+'">';
+  h += '<label>¿Operado/a?</label><select id="fi-op"><option value="Sí"'+(reg.medico&&reg.medico.operado==='Sí'?' selected':'')+'>Sí</option><option value="No"'+(!reg.medico||reg.medico.operado!=='Sí'?' selected':'')+'>No</option></select>';
+  h += '</div>';
+
+  h += '<div class="card"><h2 style="font-size:1rem;">Ruffier-Dickson</h2>';
+  h += '<div class="grid3"><div><label>Peso</label><input type="number" id="fi-rf-peso" value="'+(ruf.peso||'')+'"></div><div><label>Talla</label><input type="number" step="0.01" id="fi-rf-talla" value="'+(ruf.talla||'')+'"></div><div><label>Reposo</label><input type="number" id="fi-rf-p1" value="'+(ruf.p1||'')+'"></div></div>';
+  h += '<div class="grid2"><div><label>Al terminar</label><input type="number" id="fi-rf-p2" value="'+(ruf.p2||'')+'"></div><div><label>1 min después</label><input type="number" id="fi-rf-p3" value="'+(ruf.p3||'')+'"></div></div>';
+  h += '<p class="small" style="margin-top:8px;font-weight:600;">'+(rufCalc ? 'Resultado: '+rufCalc.resultado+' · '+rufCalc.franja+' · Nota: '+rufCalc.nota : 'Sin datos suficientes') +'</p>';
+  h += '</div>';
+
+  h += '<div class="card"><h2 style="font-size:1rem;">Batería de pruebas</h2>';
+  PRUEBAS_BATERIA.filter(p=>p.id!=='navette').forEach(p=>{
+    h += '<label>'+p.nombre+' ('+p.unidad+')</label><input type="number" step="0.1" id="fi-bat-'+p.id+'" value="'+(bat[p.id]!==undefined?bat[p.id]:'')+'">';
+  });
+  h += '<label>Resistencia · Course Navette (periodo alcanzado)</label><input type="number" id="fi-bat-navette" value="'+(bat.navette!==undefined?bat.navette:'')+'">';
+  h += '<p class="small" style="margin-top:8px;font-weight:600;">Nota de Navette (por periodo): '+(navNota!==null?navNota.toFixed(1):'—')+'</p>';
+  h += '</div>';
+
+  h += '<div class="card"><h2 style="font-size:1rem;">Actitud y hábitos</h2>';
+  ACTITUD_PREGUNTAS.forEach((p,i)=>{
+    h += '<label>'+p.q+'</label><select id="fi-act-'+i+'"><option value="">— sin responder —</option>';
+    p.opts.forEach((o,j)=>{ h += '<option value="'+j+'"'+(respAct[i]===j?' selected':'')+'>'+o+'</option>'; });
+    h += '</select>';
+  });
+  h += '</div>';
+
+  h += '<div class="card"><h2 style="font-size:1rem;">Conocimientos previos</h2>';
+  clave.forEach((p,i)=>{
+    const r = respConoc[i];
+    h += '<label>'+(i+1)+'. '+p.q+(p.tipo==='multi'?' (elige dos)':'')+'</label>';
+    if(p.tipo==='single'){
+      h += '<select id="fi-con-'+i+'"><option value="">— sin responder —</option>';
+      p.opts.forEach((o,j)=>{ h += '<option value="'+j+'"'+(r===j?' selected':'')+'>'+o+(j===p.correcta?' ✓ correcta':'')+'</option>'; });
+      h += '</select>';
+    } else {
+      p.opts.forEach((o,j)=>{
+        const marcado = Array.isArray(r) && r.includes(j);
+        h += '<div class="opt '+(marcado?'sel':'')+'" style="cursor:default;">'+o+(p.correcta.includes(j)?' ✓ correcta':'')+(marcado?' · elegida':'')+'</div>';
+      });
+      h += '<p class="small">Las de elegir dos se muestran de solo lectura. Corrígelas desde la pestaña Claves si hace falta cambiar la respuesta correcta.</p>';
+    }
+  });
+  h += '</div>';
+
+  h += '<div class="navrow"><button class="ghost" onclick="state.editingId=null;render()">Cerrar sin guardar</button><button onclick="guardarFicha()">Guardar cambios</button></div>';
   return h;
 }
-function guardarEdicionAlumno(){
-  const nombre = document.getElementById('ed-nombre').value.trim();
-  const curso = document.getElementById('ed-curso').value;
-  db.ref(pathBase()+'/alumnos/'+state.editingId).update({nombre,curso});
+function guardarFicha(){
+  const id = state.editingId;
+  const a = state.alumnos.find(x=>x.id===id);
+  const clave = (state.claves||CONOCIMIENTOS_DEFAULT)[esCuarto(a.curso)?'4':'2'];
+
+  const nombre = document.getElementById('fi-nombre').value.trim();
+  const curso = document.getElementById('fi-curso').value;
+  const repite = document.getElementById('fi-repite').value;
+  const aficiones = document.getElementById('fi-aficiones').value;
+  db.ref(pathBase()+'/alumnos/'+id).update({nombre,curso,repite,aficiones});
+
+  const medico = {
+    enfermedad: document.getElementById('fi-enf').value,
+    enfermedadCual: document.getElementById('fi-enf-cual').value,
+    operado: document.getElementById('fi-op').value
+  };
+  const p1=document.getElementById('fi-rf-p1').value, p2=document.getElementById('fi-rf-p2').value, p3=document.getElementById('fi-rf-p3').value;
+  const ruffier = (p1&&p2&&p3) ? { peso:document.getElementById('fi-rf-peso').value, talla:document.getElementById('fi-rf-talla').value, p1:parseFloat(p1), p2:parseFloat(p2), p3:parseFloat(p3) } : null;
+
+  const bateria = {};
+  PRUEBAS_BATERIA.filter(p=>p.id!=='navette').forEach(p=>{
+    const v = document.getElementById('fi-bat-'+p.id).value;
+    if(v!=='') bateria[p.id] = parseFloat(v);
+  });
+  const navVal = document.getElementById('fi-bat-navette').value;
+  if(navVal!=='') bateria.navette = parseFloat(navVal);
+
+  const actitud = ACTITUD_PREGUNTAS.map((p,i)=>{
+    const v = document.getElementById('fi-act-'+i).value;
+    return v==='' ? null : parseInt(v);
+  });
+
+  const conocimientos = clave.map((p,i)=>{
+    if(p.tipo==='single'){
+      const v = document.getElementById('fi-con-'+i).value;
+      return v==='' ? null : parseInt(v);
+    }
+    return (state.registros[id] && state.registros[id].conocimientos && state.registros[id].conocimientos[i]) || null;
+  });
+
+  db.ref(pathBase()+'/registros/'+id).update({ medico, ruffier, bateria, actitud, conocimientos });
   state.editingId = null;
-  showToast('Actualizado');
+  showToast('Ficha actualizada');
 }
 function exportarCSV(){
   let csv = 'Alumno,Curso,NotaConocimientos,NotaRuffier,NotaBateria,NotaHabitos,NotaFinal\n';
@@ -732,13 +826,7 @@ function setClaveCorrecta(curso,idx,val,tipo){
   showToast('Clave actualizada');
 }
 
-if(MODO_DEMO){
-  loadData();
-} else {
-  firebase.auth().signInAnonymously().then(loadData).catch(err=>{
-    document.getElementById('app').innerHTML = '<div class="loading">No se pudo conectar (revisa que la autenticación anónima esté activada en Firebase).<br>'+err.message+'</div>';
-  });
-}
+loadData();
 </script>
 </body>
 </html>
